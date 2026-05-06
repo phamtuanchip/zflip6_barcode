@@ -26,20 +26,34 @@ class _CoverScreenState extends State<CoverScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_selected != null) {
-      return CoverBarcodeDetail(
-        item: _selected!,
-        onBack: () => setState(() => _selected = null),
-      );
-    }
-    return _CoverList(onSelect: (item) => setState(() => _selected = item));
+    // AnimatedSwitcher fades between the list and detail views, masking any
+    // first-frame rasterisation delay in BarcodeDisplay.
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 220),
+      switchInCurve: Curves.easeOut,
+      switchOutCurve: Curves.easeIn,
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: child,
+      ),
+      child: _selected != null
+          ? CoverBarcodeDetail(
+              key: ValueKey(_selected!.id),
+              item: _selected!,
+              onBack: () => setState(() => _selected = null),
+            )
+          : _CoverList(
+              key: const ValueKey('list'),
+              onSelect: (item) => setState(() => _selected = item),
+            ),
+    );
   }
 }
 
 // ── Cover list ────────────────────────────────────────────────────────────────
 
 class _CoverList extends StatelessWidget {
-  const _CoverList({required this.onSelect});
+  const _CoverList({super.key, required this.onSelect});
 
   final void Function(BarcodeItem) onSelect;
 
